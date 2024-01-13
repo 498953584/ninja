@@ -6,9 +6,9 @@ const got1 = require('got');
 require('dotenv').config();
 const QRCode = require('qrcode');
 // 新增  , addWSCKEnv, delWSCKEnv, getWSCKEnvs, getWSCKEnvsCount, updateWSCKEnv
-const { addEnv, delEnv, getEnvs, getEnvsCount, updateEnv , addWSCKEnv, delWSCKEnv, getWSCKEnvs, getWSCKEnvsCount, updateWSCKEnv } = require('./ql');
+const { addEnv, delEnv, getEnvs, getEnvsCount, updateEnv, addWSCKEnv, delWSCKEnv, getWSCKEnvs, getWSCKEnvsCount, updateWSCKEnv, runCrons, getWskeyCron } = require('./ql');
 const path = require('path');
-const qlDir = process.env.QL_DIR || '/ql';
+const qlDir = process.env.QL_Dir || '/ql';
 const notifyFile = path.join(qlDir, 'shell/notify.sh');
 const { exec } = require('child_process');
 const { GET_RANDOM_TIME_UA } = require('./utils/USER_AGENT');
@@ -39,7 +39,7 @@ module.exports = class User {
   remark;
   #s_token;
   // 新增wskey构造入参
-  constructor({ token, okl_token, cookies, pt_key, pt_pin, cookie, eid, wseid, remarks, remark, ua, pin, wskey, jdwsck}) {
+  constructor({ token, okl_token, cookies, pt_key, pt_pin, cookie, eid, wseid, remarks, remark, ua, pin, wskey, jdwsck }) {
     this.token = token;
     this.okl_token = okl_token;
     this.cookies = cookies;
@@ -63,7 +63,7 @@ module.exports = class User {
     if (remarks) {
       this.remark = remarks.match(/remark=(.*?);/) && remarks.match(/remark=(.*?);/)[1];
     }
-/////////////////////////////////////////////////
+    /////////////////////////////////////////////////
     // 新增pin
     this.pin = pin;
     // 新增wskey
@@ -84,7 +84,7 @@ module.exports = class User {
     if (this.jdwsck && this.nickName === null || this.nickName === '') {
       this.nickName = this.pin;
     }
-/////////////////////////////////////////////////
+    /////////////////////////////////////////////////
   }
 
   async getQRConfig() {
@@ -112,9 +112,8 @@ module.exports = class User {
 
     const nowTime = Date.now();
     // eslint-disable-next-line prettier/prettier
-    const taskPostUrl = `https://plogin.m.jd.com/cgi-bin/m/tmauthreflogurl?s_token=${
-      this.#s_token
-    }&v=${nowTime}&remember=true`;
+    const taskPostUrl = `https://plogin.m.jd.com/cgi-bin/m/tmauthreflogurl?s_token=${this.#s_token
+      }&v=${nowTime}&remember=true`;
 
     const configRes = await api({
       method: 'post',
@@ -144,7 +143,7 @@ module.exports = class User {
   }
 
   async checkQRLogin() {
-    if(true){
+    if (true) {
       return {
         errcode: 200,
         message: '扫码登录已关闭，请自行抓包手动CK登录',
@@ -208,13 +207,13 @@ module.exports = class User {
         if (body.code !== 200) {
           throw new UserError(body.message || '添加账户错误，请重试', 220, body.code || 200);
         }
-        this.eid = body.data[0]._id;
+        this.eid = body.data[0].id;
         this.timestamp = body.data[0].timestamp;
         message = `注册成功，${this.nickName}`;
         this.#sendNotify('Ninja 运行通知', `用户 ${this.nickName}(${decodeURIComponent(this.pt_pin)}) 已上线`);
       }
     } else {
-      this.eid = env._id;
+      this.eid = env.id;
       const body = await updateEnv(this.cookie, this.eid);
       if (body.code !== 200) {
         throw new UserError(body.message || '更新账户错误，请重试', 221, body.code || 200);
@@ -227,13 +226,13 @@ module.exports = class User {
       nickName: this.nickName,
       eid: this.eid,
       timestamp: this.timestamp,
-      message,
+      message: message,
     };
   }
 
   async getUserInfoByEid() {
     const envs = await getEnvs();
-    const env = await envs.find((item) => item._id === this.eid);
+    const env = await envs.find((item) => item.id == this.eid);
     if (!env) {
       throw new UserError('没有找到这个账户，重新登录试试看哦', 230, 200);
     }
@@ -258,7 +257,7 @@ module.exports = class User {
     }
 
     const envs = await getEnvs();
-    const env = await envs.find((item) => item._id === this.eid);
+    const env = await envs.find((item) => item.id == this.eid);
     if (!env) {
       throw new UserError('没有找到这个ck账户，重新登录试试看哦', 230, 200);
     }
@@ -288,11 +287,11 @@ module.exports = class User {
     };
   }
 
-/////////////////////////////////////////////////
+  /////////////////////////////////////////////////
   // 新增同步方法
   async WSCKLogin() {
     let message;
-    await this.#getWSCKCheck();
+    // await this.#getWSCKCheck();
     const envs = await getWSCKEnvs();// 1
     const poolInfo = await User.getPoolInfo();
     const env = await envs.find((item) => item.value.match(/pin=(.*?);/)[1] === this.pin);
@@ -308,13 +307,13 @@ module.exports = class User {
         if (body.code !== 200) {
           throw new UserError(body.message || '添加账户错误，请重试', 220, body.code || 200);
         }
-        this.wseid = body.data[0]._id;
+        this.wseid = body.data[0].id;
         this.timestamp = body.data[0].timestamp;
         message = `录入成功，${this.pin}`;
         this.#sendNotify('Ninja 运行通知', `用户 ${this.pin} WSCK 添加成功`);
       }
     } else {
-      this.wseid = env._id;
+      this.wseid = env.id;
       const body = await updateWSCKEnv(this.jdwsck, this.wseid);
       if (body.code !== 200) {
         throw new UserError(body.message || '更新账户错误，请重试', 221, body.code || 200);
@@ -333,11 +332,11 @@ module.exports = class User {
       message,
     };
   }
-  
+
   //不查nickname了，用remark代替
   async getWSCKUserInfoByEid() {
     const envs = await getWSCKEnvs();
-    const env = await envs.find((item) => item._id === this.wseid);
+    const env = await envs.find((item) => item.id == this.wseid);
     if (!env) {
       throw new UserError('没有找到这个账户，重新登录试试看哦', 230, 200);
     }
@@ -362,7 +361,7 @@ module.exports = class User {
     }
 
     const envs = await getWSCKEnvs();
-    const env = await envs.find((item) => item._id === this.wseid);
+    const env = await envs.find((item) => item.id == this.wseid);
     if (!env) {
       throw new UserError('没有找到这个wskey账户，重新登录试试看哦', 230, 200);
     }
@@ -392,7 +391,7 @@ module.exports = class User {
     };
   }
 
-/////////////////////////////////////////////////
+  /////////////////////////////////////////////////
 
   static async getPoolInfo() {
     const count = await getEnvsCount();
@@ -402,11 +401,12 @@ module.exports = class User {
     return {
       marginCount: allowCount >= 0 ? allowCount : 0,
       marginWSCKCount: allowWSCKCount >= 0 ? allowWSCKCount : 0,
-      allowAdd: Boolean(process.env.ALLOW_ADD) || false,
-      allowWSCKAdd: Boolean(process.env.ALLOW_WSCK_ADD) || false,
-      showQR: Boolean(process.env.SHOW_QR) || false,
-      showWSCK: Boolean(process.env.SHOW_WSCK) || false,
-      showCK: Boolean(process.env.SHOW_CK) || false,
+      allowAdd: process.env.ALLOW_ADD == 'true',
+      allowWSCKAdd: process.env.ALLOW_WSCK_ADD == 'true',
+      showQR: process.env.SHOW_QR == 'true',
+      showWSCK: process.env.SHOW_WSCK == 'true',
+      showCK: process.env.SHOW_CK == 'true',
+      UpWskey: process.env.UpWskey == 'true',
     };
   }
 
@@ -454,7 +454,7 @@ module.exports = class User {
         },
       }).json();
     }
-    
+
     if (!body.data?.userInfo && !body_bak?.data.userInfo && this.jdwsck && !nocheck) {
       throw new UserError('获取用户信息失败，请检查您的 wskey ！', 201, 200);
     } else if (!body.data?.userInfo && !body_bak?.data.userInfo && !nocheck) {
@@ -499,16 +499,16 @@ module.exports = class User {
       }
     });
   }
-//////////////////////////////////////////////
+  //////////////////////////////////////////////
   async #getWSCKCheck() {
-    const s = await api({url: `https://pan.smxy.xyz/sign`}).json();
+    const s = await api({ url: `https://pan.smxy.xyz/sign` }).json();
     const clientVersion = s['clientVersion']
     const client = s['client']
     const sv = s['sv']
     const st = s['st']
     const uuid = s['uuid']
     const sign = s['sign']
-    if (!sv||!st||!uuid||!sign) {
+    if (!sv || !st || !uuid || !sign) {
       throw new UserError('获取签名失败，请等待Ninja修理 ！', 200, 200);
     }
     const body = await api({
@@ -524,7 +524,7 @@ module.exports = class User {
       },
     }).json();
     const response = await got1({
-      followRedirect:false,
+      followRedirect: false,
       url: `https://un.m.jd.com/cgi-bin/app/appjmp?tokenKey=${body['tokenKey']}&to=https://plogin.m.jd.com/cgi-bin/m/thirdapp_auth_page?token=AAEAIEijIw6wxF2s3bNKF0bmGsI8xfw6hkQT6Ui2QVP7z1Xg&client_type=android&appid=879&appup_type=1`,
       headers: {
         'User-Agent': 'okhttp/3.12.1;jdmall;android;version/10.1.2;build/89743;screen/1440x3007;os/11;network/wifi;',
@@ -540,7 +540,7 @@ module.exports = class User {
       const pt_pin = headers['set-cookie'][3];
       this.pt_pin = pt_pin.substring(pt_pin.indexOf('=') + 1, pt_pin.indexOf(';'));
     }
-    if (this.pt_key&&this.pt_pin) {
+    if (this.pt_key && this.pt_pin) {
       this.cookie = 'pt_key=' + this.pt_key + ';pt_pin=' + this.pt_pin + ';';
       const result = await this.CKLogin();
       this.eid = result.eid
@@ -549,6 +549,16 @@ module.exports = class User {
     }
   }
   ////////////////////////////////////////////////
+  async wskeyConvert() {
+    const cron = await getWskeyCron();
+    if (cron && cron.data && cron.data.data && cron.data.data.length > 0) {
+      let body = await runCrons(cron.data.data[0].id);
+      if (body.code !== 200) {
+        throw new UserError(body.message || '执行任务失败，请重试', 221, body.code || 200);
+      }
+      return true;
+    }
+  }
 };
 
 class UserError extends Error {

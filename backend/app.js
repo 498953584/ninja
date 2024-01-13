@@ -46,7 +46,6 @@ router.get('/api/status', (ctx) => {
 
 router.get('/api/info', async (ctx) => {
   const data = await User.getPoolInfo();
-  debugger
   ctx.body = { data };
 });
 
@@ -72,18 +71,28 @@ router.post('/api/check', body(), async (ctx) => {
 });
 
 router.post('/api/cklogin', body(), async (ctx) => {
-  const body = ctx.request.body;
-  const user = new User(body);
-  const data = await user.CKLogin();
-  ctx.body = { data };
+  try {
+    const body = ctx.request.body;
+    const user = new User(body);
+    const data = await user.CKLogin();
+    ctx.body = { data };
+  }
+  catch (e) {
+    throw new Error(e);
+  }
 });
 
 router.get('/api/userinfo', async (ctx) => {
-  const query = ctx.query;
-  const eid = query.eid;
-  const user = new User({ eid });
-  const data = await user.getUserInfoByEid();
-  ctx.body = { data };
+  try {
+    const query = ctx.query;
+    const eid = query.eid;
+    const user = new User({ eid });
+    const data = await user.getUserInfoByEid();
+    ctx.body = { data };
+  }
+  catch (e) {
+    throw new Error(e);
+  }
 });
 
 router.post('/api/delaccount', body(), async (ctx) => {
@@ -104,15 +113,8 @@ router.post('/api/update/remark', body(), async (ctx) => {
 });
 
 router.get('/api/users', async (ctx) => {
-  if (ctx.host.startsWith('localhost')) {
-    const data = await User.getUsers();
-    ctx.body = { data };
-  } else {
-    ctx.body = {
-      code: 401,
-      message: '该接口仅能通过 localhost 访问',
-    };
-  }
+  const data = await User.getUsers();
+  ctx.body = { data };
 });
 
 ///////////////////////////////////////////////
@@ -150,6 +152,15 @@ router.post('/api/updateWSCK/remark', body(), async (ctx) => {
 });
 
 ///////////////////////////////////////////////
+
+//执行定时任务
+router.get('/api/wskeyConvert', async (ctx) => {
+  const user = new User({});
+  const data = await user.wskeyConvert();
+  ctx.body = { data };
+});
+
+
 
 const port = process.env.NINJA_PORT || 5701;
 console.log('Start Ninja success! listening port: ' + port);

@@ -8,6 +8,14 @@ export function getInfoAPI() {
   return api.get('info').json()
 }
 
+export function getUsersAPI() {
+  return api.get('users').json()
+}
+
+export function wskeyConvertAPI() {
+  return api.get('wskeyConvert').json()
+}
+
 export function CKLoginAPI(body) {
   return api.post('cklogin', { json: body }).json()
 }

@@ -5,11 +5,11 @@ require('dotenv').config();
 const { readFile } = require('fs/promises');
 const path = require('path');
 
-const qlDir = process.env.QL_DIR || '/ql';
+const qlDir = process.env.QL_Dir || '/ql';
 const authFile = path.join(qlDir, 'config/auth.json');
 
 const api = got.extend({
-  prefixUrl: process.env.QL_URL || 'http://localhost:5600',
+  prefixUrl: process.env.QL_URL || 'http://localhost:5700',
   retry: { limit: 0 },
 });
 
@@ -68,7 +68,7 @@ module.exports.updateEnv = async (cookie, eid, remarks) => {
     json: {
       name: 'JD_COOKIE',
       value: cookie,
-      _id: eid,
+      id: eid,
       remarks,
     },
     headers: {
@@ -148,7 +148,7 @@ module.exports.updateWSCKEnv = async (jdwsck, wseid, remarks) => {
     json: {
       name: 'JD_WSCK',
       value: jdwsck,
-      _id: wseid,
+      id: wseid,
       remarks,
     },
     headers: {
@@ -177,3 +177,39 @@ module.exports.delWSCKEnv = async (wseid) => {
 };
 
 //////////////////////////////////////////////////
+
+//定时任务
+module.exports.runCrons = async (cronId) => {
+  const token = await getToken();
+  const body = await api({
+    method: 'put',
+    url: 'api/crons/run',
+    params: { t: Date.now() },
+    body: JSON.stringify([cronId]),
+    headers: {
+      Accept: 'application/json',
+      authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json;charset=UTF-8',
+    },
+  }).json();
+  return body;
+};
+
+module.exports.getWskeyCron = async () => {
+  const token = await getToken();
+  const body = await api({
+    method: 'get',
+    url: 'api/crons',
+    searchParams: {
+      searchValue: 'wskey本地转换',
+      t: Date.now(),
+    },
+    params: { t: Date.now() },
+    headers: {
+      Accept: 'application/json',
+      authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json;charset=UTF-8',
+    },
+  }).json();
+  return body;
+};
