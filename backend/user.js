@@ -6,7 +6,7 @@ const got1 = require('got');
 require('dotenv').config();
 const QRCode = require('qrcode');
 // 新增  , addWSCKEnv, delWSCKEnv, getWSCKEnvs, getWSCKEnvsCount, updateWSCKEnv
-const { addEnv, delEnv, getEnvs, getEnvsCount, updateEnv, addWSCKEnv, delWSCKEnv, getWSCKEnvs, getWSCKEnvsCount, updateWSCKEnv, runCrons, getWskeyCron } = require('./ql');
+const { addEnv, delEnv, getEnvs, getEnvsCount, updateEnv, addWSCKEnv, delWSCKEnv, getWSCKEnvs, getWSCKEnvsCount, updateWSCKEnv, runCrons, getWskeyCron, enableWSCKEnv } = require('./ql');
 const path = require('path');
 const qlDir = process.env.QL_Dir || '/ql';
 const notifyFile = path.join(qlDir, 'shell/notify.sh');
@@ -76,12 +76,12 @@ module.exports = class User {
     }
 
     // 新增如果备注是空则默认取pt_pin作为备注
-    if (this.jdwsck && this.remark === null || this.remark === '') {
+    if (this.remark === null || this.remark === '') {
       this.remark = this.pin;
     }
 
     // 新增如果nickName是空默认取pt_pin作为备注
-    if (this.jdwsck && this.nickName === null || this.nickName === '') {
+    if (this.nickName === null || this.nickName === '') {
       this.nickName = this.pin;
     }
     /////////////////////////////////////////////////
@@ -318,12 +318,16 @@ module.exports = class User {
       if (body.code !== 200) {
         throw new UserError(body.message || '更新账户错误，请重试', 221, body.code || 200);
       }
+      if (env.status == 1) {
+        body = await enableWSCKEnv(this.wseid);
+        if (body.code !== 200) {
+          throw new UserError(body.message || '帐号启用失败，请重试', 221, body.code || 200);
+        }
+      }
       this.timestamp = body.data.timestamp;
       message = `欢迎回来，${this.nickName}`;
       this.#sendNotify('Ninja 运行通知', `用户 ${this.pin} 已更新 WSCK`);
     }
-
-
     return {
       nickName: this.nickName,
       eid: this.eid,

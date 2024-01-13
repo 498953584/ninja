@@ -9,8 +9,8 @@
         <p>更新时间：{{ timestamp }}</p>
       </div>
       <div class="card-footer">
-        <el-button size="small" auto @click="logout">退出登录</el-button>
-        <el-button type="danger" size="small" auto @click="delAccount">删除CK</el-button>
+        <el-button auto @click="logout">退出登录</el-button>
+        <el-button type="danger" auto @click="delAccount">删除CK</el-button>
       </div>
     </div>
     
@@ -29,11 +29,11 @@
             </div>
       </div>
       <div class="card-body text-center">
-        <el-input v-model="jdwsck" placeholder="pin=xxxxxx;wskey=xxxxxxxxxx;" size="small" clearable class="my-4 w-full" />
+        <el-input v-model="jdwsck" placeholder="pin=xxxxxx;wskey=xxxxxxxxxx;" clearable class="my-4 w-full" />
       </div>
       <div class="card-footer">
-        <el-button type="success" size="small" auto @click="WSCKLogin">重新录入</el-button>
-        <el-button type="danger" size="small" auto @click="delWSCKAccount">删除WSCK</el-button>
+        <el-button type="success" auto @click="WSCKLogin">重新录入</el-button>
+        <el-button type="danger" auto @click="delWSCKAccount">删除WSCK</el-button>
       </div>
     </div>
     
@@ -42,10 +42,10 @@
         <p class="card-title">修改备注（CK和WSCK同步）</p>
       </div>
       <div class="card-body text-center">
-        <el-input v-model="remark" size="small" clearable class="my-4 w-full" />
+        <el-input v-model="remark" clearable class="my-4 w-full" />
       </div>
       <div class="card-footer">
-        <el-button type="success" size="small" auto @click="changeremark">修改</el-button>
+        <el-button type="success" auto @click="changeremark">修改</el-button>
       </div>
     </div>
     

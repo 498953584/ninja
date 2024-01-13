@@ -27,13 +27,13 @@
         </div>
       </div>
       <div class="card-body text-center">
-        <el-select
-          v-model="txtPin"
-          class="m-2"
-          placeholder="pin"
-          size="small"
-          style="width: 240px"
-        >
+        <el-input
+          v-model="txtWskey"
+          placeholder="wskey=xxxxxxxxxx;"
+          clearable
+          class="my-4 w-full"
+        />
+        <el-select v-model="txtPin" placeholder="请选择帐号" class="my-4 w-full">
           <el-option
             v-for="item in pinData"
             :key="item.pt_pin"
@@ -41,16 +41,7 @@
             :value="item.pt_pin"
           />
         </el-select>
-        <el-input
-          v-model="txtWskey"
-          placeholder="wskey=xxxxxxxxxx;"
-          size="small"
-          clearable
-          class="my-4 w-full"
-        />
-        <el-button type="primary" size="small" round @click="postWskey"
-          >确定</el-button
-        >
+        <el-button type="primary" round @click="postWskey">确定</el-button>
       </div>
       <div class="card-footet"></div>
     </div>
@@ -121,13 +112,10 @@
         <el-input
           v-model="jdwsck"
           placeholder="pin=xxxxxx;wskey=xxxxxxxxxx;"
-          size="small"
           clearable
           class="my-4 w-full"
         />
-        <el-button type="primary" size="small" round @click="WSCKLogin"
-          >录入</el-button
-        >
+        <el-button type="primary" round @click="WSCKLogin">录入</el-button>
       </div>
       <div class="card-footet"></div>
     </div>
@@ -168,10 +156,8 @@
         <span class="card-subtitle"> 请在下方输入您的 cookie 登录。 </span>
       </div>
       <div class="card-body text-center">
-        <el-input v-model="cookie" size="small" clearable class="my-4 w-full" />
-        <el-button type="primary" size="small" round @click="CKLogin"
-          >登录</el-button
-        >
+        <el-input v-model="cookie" clearable class="my-4 w-full" />
+        <el-button type="primary" round @click="CKLogin">登录</el-button>
       </div>
       <div class="card-footet"></div>
     </div>
@@ -346,34 +332,43 @@ export default {
         ElMessage.error('wskey不能为空！')
         return
       }
-      if (data.txtPin == '') {
-        ElMessage.error('请选择需要更新的用户！')
-        return
-      }
       if (wskey[wskey.length - 1] != ';') {
         wskey += ';'
       }
-      let m = wskey.match(/wskey=(.*?);/)
+      let pin
+      let m = wskey.match(/(pt_){0,1}pin=(.*?);/)
+      if (m) {
+        pin = m[2]
+      } else {
+        pin = data.txtPin
+      }
+      if (pin == '') {
+        ElMessage.error('请选择需要更新的帐号！')
+        return
+      }
+      m = wskey.match(/wskey=(.*?);/)
       if (m) {
         wskey = m[1]
       } else {
         wskey = wskey.substring(0, wskey.length - 1)
       }
-      const body = await WSCKLoginAPI({ wskey: wskey, pin: data.txtPin })
+      const body = await WSCKLoginAPI({ wskey: wskey, pin: pin })
       if (body.data.wseid) {
         localStorage.setItem('wseid', body.data.wseid)
         ElMessage.success(body.message)
         data.txtWskey = ''
-        ElMessageBox.confirm('是否执行wskey转换任务？', 'info', {
+        ElMessageBox.confirm('是否执行wskey转换任务？', '提示', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'info',
-        }).then(async () => {
-          body = await wskeyConvertAPI()
-          if (body.data) {
-            ElMessage.success('执行成功')
-          }
         })
+          .then(async () => {
+            body = await wskeyConvertAPI()
+            if (body.data) {
+              ElMessage.success('执行成功')
+            }
+          })
+          .catch(() => {})
       } else {
         ElMessage.error(body.message || 'wskey 解析失败，请检查后重试！')
       }

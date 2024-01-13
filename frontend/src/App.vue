@@ -24,7 +24,7 @@ import Header from './components/Header.vue'
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
   box-sizing: border-box;
-  @apply bg-gray-50 min-h-screen pb-5 select-none;
+  @apply bg-gray-50 min-h-screen pb-5;
 }
 
 *,
