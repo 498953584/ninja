@@ -24,7 +24,7 @@
 
 Ninja 仅供学习参考使用，请于下载后的 24 小时内删除，本人不对使用过程中出现的任何问题负责，包括但不限于 `数据丢失` `数据泄露`。
 
-Ninja 仅支持 qinglong 2.8.2+
+Ninja 仅支持 qinglong 2.16.5+
 
 [TG 频道](https://t.me/joinchat/sHKuteb_lfdjNmZl)
 
@@ -98,23 +98,23 @@ Ninja 仅支持 qinglong 2.8.2+
    **进容器内执行以下命令**
 
    ```bash
-   git clone https://github.com/KingRan/kingrom_ninja.git /ql/ninja
-   cd /ql/ninja/backend
+   git clone https://gitee.com/xiongleo/ninja.git /ql/data/ninja
+   cd /ql/data/ninja/backend
    pnpm install
    cp .env.example .env # 如有需要, 修改.env
    pm2 start
-   cp sendNotify.js /ql/scripts/sendNotify.js
+   #cp sendNotify.js /ql/data/scripts/sendNotify.js
    ```
 
 3. 将以下内容粘贴到 `extra.sh`（重启后自动更新并启动 Ninja）
 
    ```bash
-   cd /ql/ninja/backend
+   cd /ql/data/ninja/backend
    git checkout .
    git pull
    pnpm install
    pm2 start
-   cp sendNotify.js /ql/scripts/sendNotify.js
+   #cp sendNotify.js /ql/data/scripts/sendNotify.js
    ```
 
 ### 容器外
@@ -124,7 +124,7 @@ Ninja 仅支持 qinglong 2.8.2+
 使用此种方法无法跟随青龙一起启动，**无法发送扫码通知**，请知悉。
 
 ```bash
-git clone https://github.com/KingRan/kingrom_ninja.git
+git clone https://gitee.com/xiongleo/ninja.git
 cd ninja/backend
 pnpm install
 # 复制 sendNotify.js 到容器内 scripts 目录，`qinglong` 为容器名
@@ -163,7 +163,7 @@ QL_URL=http://localhost:5700
 配置方式：
 
 ```bash
-cd /ql/ninja/backend
+cd /ql/data/ninja/backend
 cp .env.example .env
 vi .env
 pm2 start
@@ -179,9 +179,9 @@ pm2 start
 
 ### Ninja 自定义
 
-（未完成）自定义推送二维码：将 `push.jpg` 文件添加到 `/ql/ninja/backend/static/` 目录下刷新网页即可。
+（未完成）自定义推送二维码：将 `push.jpg` 文件添加到 `/ql/data/ninja/backend/static/` 目录下刷新网页即可。
 
-自定义常见活动：修改 `/ql/backend/static/activity.json` 即可
+自定义常见活动：修改 `/ql/data/backend/static/activity.json` 即可
 
 ## 注意事项
 
@@ -194,7 +194,7 @@ pm2 start
 ## 如何更新Ninja
 
 ```bash
-cd /ql/ninja
+cd /ql/data/ninja
 git checkout .
 git pull
 cd backend
@@ -204,7 +204,7 @@ pm2 start
 ## 如何删除Ninja
 
 ```bash
-cd /ql/ninja
+cd /ql/data/ninja
 pm2 delete ninja
 rm -rf *
 rm -r ./.*
